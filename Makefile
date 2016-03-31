@@ -36,7 +36,6 @@ client-5:
 	token=`grep 'token' .token | sed -e 's;.*"token":";;' -e 's;".*;;'`; \
 	curl -s -k -D- -H "Authorization: jwt $$token" \
 		https://127.0.0.1:8888/sv/protected
-
 client-6:
 	curl -s -k -D- -X POST \
 		-H "Content-type: application/json" \
@@ -50,4 +49,9 @@ client-7:
 client-8:
 	(sleep 1; echo '{ "foo": 42 }'; sleep 1; echo '{ "bar": 7 }'; sleep 1) | wscat -n -c \
 		https://127.0.0.1:8888/sv/ws3
+client-9:
+	curl -s -k -D- -X PUT -H "Content-type: text/plain" --data 'quux' \
+		https://127.0.0.1:8888/sv/items/foo; echo ""
+	curl -s -k -D- -X GET \
+		https://127.0.0.1:8888/sv/items/foo; echo ""
 
