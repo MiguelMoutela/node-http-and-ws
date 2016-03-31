@@ -85,23 +85,33 @@ co(function * () {
     verbose(1, "++ starting " + chalk.bold(Package.description))
 
     /*  establish connection to database  */
-    const db = AlaSQL.promise
+    const db = {
+        query (...args) {
+            return AlaSQL.promise(...args)
+        },
+        queryOne (...args) {
+            return this.query(...args).then((result) => {
+                if (result.length > 1)
+                    throw new Error("more than one result found")
+                return (result.length === 1 ? result[0] : null)
+            })
+        }
+    }
     let exists = yield fs.exists(argv.D)
     if (!exists) {
         /*  on-the-fly provide database  */
         let password = yield pbkdf2.hash(argv.p, 10, "sha256")
         password = password.toString("hex")
-        yield db(`
+        yield db.query(`
             CREATE FILESTORAGE DATABASE db("${argv.D}");
             ATTACH FILESTORAGE DATABASE db("${argv.D}");
             USE DATABASE db;
             CREATE TABLE users (username TEXT PRIMARY KEY, password TEXT);
             CREATE TABLE items (name TEXT PRIMARY KEY, val TEXT);
-            INSERT INTO users VALUES ("admin", ?);`,
-            [ password ])
+            INSERT INTO users VALUES ("admin", ?);`, [ password ])
     }
     else
-        yield db(`
+        yield db.query(`
             ATTACH FILESTORAGE DATABASE db("${argv.D}");
             USE DATABASE db;`)
 
@@ -161,8 +171,10 @@ co(function * () {
     })
 
     /*  prepare for JSONWebToken (JWT) authentication  */
-    let result = yield db(`SELECT password FROM users WHERE username = "admin"`)
-    let jwtKey = result[0].password
+    let result = yield db.queryOne(`SELECT password FROM users WHERE username = "admin"`)
+    if (result === null)
+        throw new Error("admin user not found")
+    let jwtKey = result.password
     server.register(require("hapi-auth-jwt2"), (err) => {
         if (err)
             throw new Error(err)
@@ -173,11 +185,8 @@ co(function * () {
             cookieKey:     "token",
             tokenType:     "JWT",
             validateFunc: (decoded, request, callback) => {
-                db("SELECT 1 FROM users WHERE username = ?", [ decoded.id ]).then((result) => {
-                    if (result.length === 1)
-                        return callback(null, true, decoded)
-                    else
-                        return callback(null, false, decoded)
+                db.queryOne("SELECT 1 FROM users WHERE username = ?", [ decoded.id ]).then((result) => {
+                    return callback(null, result !== null, decoded)
                 })
             }
         })

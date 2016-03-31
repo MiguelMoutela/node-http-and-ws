@@ -23,12 +23,12 @@ module.exports = (ctx) => {
                 let { username, password } = request.payload
 
                 /*  determine user  */
-                let result = yield ctx.db("SELECT password FROM users WHERE username = ?", [ username ])
-                if (result.length !== 1)
+                let result = yield ctx.db.queryOne("SELECT password FROM users WHERE username = ?", [ username ])
+                if (result === null)
                     return reply(Boom.unauthorized("invalid username"))
 
                 /*  verify credential  */
-                let buf = new Buffer(result[0].password, "hex")
+                let buf = new Buffer(result.password, "hex")
                 let valid = yield pbkdf2.verify(password, buf)
                 if (!valid)
                     return reply(Boom.unauthorized("invalid credentials"))
