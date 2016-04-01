@@ -44,6 +44,10 @@ client-6:
 	(sleep 1; echo '{ "foo": 42 }'; sleep 1) | wscat -n -c \
 		https://127.0.0.1:8888/sv/ws1
 client-7:
+	curl -s -k -D- -X POST \
+		-H "Content-type: application/json" \
+		--data '{ "foo": 42 }' \
+		https://127.0.0.1:8888/sv/ws2; echo ""
 	(sleep 1; echo '{ "foo": 42 }'; sleep 1) | wscat -n -c \
 		https://127.0.0.1:8888/sv/ws2
 client-8:
