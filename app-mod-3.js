@@ -1,6 +1,5 @@
 
 import co     from "co"
-import Boom   from "boom"
 import JWT    from "jsonwebtoken"
 import pbkdf2 from "pbkdf2-utils"
 
@@ -25,13 +24,13 @@ module.exports = (ctx) => {
                 /*  determine user  */
                 let result = yield ctx.db.queryOne("SELECT password FROM users WHERE username = ?", [ username ])
                 if (result === null)
-                    return reply(Boom.unauthorized("invalid username"))
+                    return reply.unauthorized("invalid username")
 
                 /*  verify credential  */
                 let buf = new Buffer(result.password, "hex")
                 let valid = yield pbkdf2.verify(password, buf)
                 if (!valid)
-                    return reply(Boom.unauthorized("invalid credentials"))
+                    return reply.unauthorized("invalid credentials")
 
                 /*  issue new token  */
                 let token = JWT.sign({
@@ -42,7 +41,7 @@ module.exports = (ctx) => {
                 reply({ token: token }).code(201)
 
             }).catch((err) => {
-                reply(Boom.badImplementation(`internal error: ${err.message}`))
+                reply.badImplementation(`internal error: ${err.message}`)
             })
         }
     })

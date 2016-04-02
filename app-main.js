@@ -16,6 +16,7 @@ import HAPIDucky     from "hapi-plugin-ducky"
 import HAPITraffic   from "hapi-plugin-traffic"
 import HAPIHeader    from "hapi-plugin-header"
 import HAPIWebSocket from "hapi-plugin-websocket"
+import HAPIBoom      from "hapi-boom-decorators"
 import Joi           from "joi"
 import Boom          from "boom"
 import Inert         from "inert"
@@ -144,6 +145,7 @@ co(function * () {
     let register = Bluebird.promisify(server.register, { context: server })
     yield register({ register: Inert })
     yield register({ register: Auth })
+    yield register({ register: HAPIBoom })
     yield register({ register: HAPIDucky })
     yield register({ register: HAPIHeader, options: { Server: `${Package.name}/${Package.version}` }})
     yield register({ register: HAPIWebSocket })

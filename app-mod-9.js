@@ -1,6 +1,5 @@
 
-import co     from "co"
-import Boom   from "boom"
+import co from "co"
 
 module.exports = (ctx) => {
 
@@ -13,11 +12,11 @@ module.exports = (ctx) => {
                 let name = request.params.name
                 let result = yield ctx.db.queryOne("SELECT val FROM items WHERE name = ?", [ name ])
                 if (result === null)
-                    reply(Boom.notFound("no such item"))
+                    reply.notFound("no such item")
                 else
                     reply(result.val).type("text/plain")
             }).catch((err) => {
-                reply(Boom.badImplementation(`internal error: ${err.message}`))
+                reply.badImplementation(`internal error: ${err.message}`)
             })
         }
     })
@@ -38,7 +37,7 @@ module.exports = (ctx) => {
                     yield ctx.db.query("UPDATE items SET val = ? WHERE name = ?", [ val, name ])
                 reply().code(204)
             }).catch((err) => {
-                reply(Boom.badImplementation(`internal error: ${err.message}`))
+                reply.badImplementation(`internal error: ${err.message}`)
             })
         }
     })
